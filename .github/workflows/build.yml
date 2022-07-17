@@ -1,0 +1,23 @@
+name: 'Build resource pack & upload to workflow'
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set variables
+        id: vars
+        run: |
+          repositoryName=$(basename `git rev-parse --show-toplevel`)
+          repositoryHash=$(git rev-parse --short HEAD)
+          echo ::set-output name=repositoryName::${repositoryName}
+          echo ::set-output name=repositoryHash::${repositoryHash}
+          echo ::set-output name=fileName::"${repositoryName}-rev.${repositoryHash}"
+      - name: Packaging in archive
+        run: zip -r "${{ steps.vars.outputs.fileName }}.zip" -x@.gitignore -x@.ignore -z . < LICENSE
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Resource pack
+          path: ${{ steps.vars.outputs.fileName }}.zip
